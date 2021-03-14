@@ -1,6 +1,8 @@
 # gulp-package.json
 gulpのpackage.jsonファイルです。
 
+gulp.jsファイルの内容
+
 ```
 const { src, dest,lastRun, watch, series, parallel } = require("gulp");
 // 直列処理(順番に処理):series(), 並列処理（順番を問わない）:parallel()
@@ -107,6 +109,7 @@ exports.sass = series(compileSass, mincss, browserReload);
 exports.imagemin = series(imageminAll, browserReload);
 exports.default = parallel(buildServer, watchFiles);
 ```
-
-
+terminalで実行する内容。
+```
 npm install gulp-sass gulp-plumber gulp-postcss autoprefixer css-declaration-sorter gulp-clean-css gulp-rename gulp-sass-glob browser-sync gulp-imagemin imagemin-optipng imagemin-mozjpeg gulp-mode postcss@8.1.0 --save-dev
+```
