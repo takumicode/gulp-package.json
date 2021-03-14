@@ -1,7 +1,7 @@
 # gulp-package.json
 gulpのpackage.jsonファイルです。
 
-
+```
 const { src, dest,lastRun, watch, series, parallel } = require("gulp");
 // 直列処理(順番に処理):series(), 並列処理（順番を問わない）:parallel()
 const sass = require('gulp-sass');
@@ -23,7 +23,7 @@ const mode = require('gulp-mode')({
   verbose: false,
 })
 
-const compileSass = done => {
+function compileSass(cb) {
   const postcssPlugins = [
     autoprefixer({
     // browserlistはpackage.jsonに記載[推奨]
@@ -40,19 +40,19 @@ const compileSass = done => {
   .pipe(postcss(postcssPlugins))
   .pipe(mode.production(gcmq()))
   .pipe(dest("./src/css", { sourcemaps: './sourcemaps' /* write */ }));
-  done(); // 終了宣言
+  cb(); // 終了宣言
 }
 
-const mincss = done => {
+function mincss(cb) {
   src('./src/css/style.css')
   .pipe(cleanCSS())
   .pipe(rename({suffix: '.min'}))
   .pipe(dest('./src/css'));
-  done();
+  cb();
 }
 
 // ローカルサーバ起動
-const buildServer = done => {
+function buildServer(cb) {
   browserSync.init({
     port: 8080,
     notify: false,
@@ -64,7 +64,7 @@ const buildServer = done => {
     // files: ['./**/*.php'],
     // proxy: 'http://localsite.wp/',
   })
-  done()
+  cb();
 }
 
 //圧縮率の定義
@@ -81,30 +81,32 @@ imagemin.optipng(),
 imagemin.svgo()
 ];
 
- const imageminAll = done => {
+ function imageminAll(cb) {
    src('./src/img/base/*.{png,jpg,gif,svg}', { since: lastRun(imageminAll) })
    .pipe(imagemin(imageminOption))
    .pipe(dest('./src/img'));
-   done();
+   cb();
  }
 
 // ブラウザ自動リロード
-const browserReload = done => {
+function browserReload(cb) {
   browserSync.reload()
-  done()
+  cb();
 }
 
 // ファイル監視
-const watchFiles = () => {
+function watchFiles(cb) {
   watch('./**/*.html', browserReload);
-  watch('./src/scss/*.scss', browserReload);
+  watch('./src/scss/*.scss', series(compileSass, mincss, browserReload));
   watch('./src/js/**/*.js', browserReload);
-  watch('./src/img/base/*.{png,jpg,gif,svg}', browserReload);
+  watch('./src/img/base/*.{png,jpg,gif,svg}', series(imageminAll, browserReload));
+  cb();
 }
 
 exports.sass = series(compileSass, mincss, browserReload);
 exports.imagemin = series(imageminAll, browserReload);
 exports.default = parallel(buildServer, watchFiles);
+```
 
 
 npm install gulp-sass gulp-plumber gulp-postcss autoprefixer css-declaration-sorter gulp-clean-css gulp-rename gulp-sass-glob browser-sync gulp-imagemin imagemin-optipng imagemin-mozjpeg gulp-mode postcss@8.1.0 --save-dev
